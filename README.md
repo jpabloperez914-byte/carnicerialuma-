@@ -59,7 +59,7 @@ Una vez instaladas las dependencias, el sistema se puede iniciar de dos maneras:
 El sistema se inicializa con un usuario administrador por defecto:
 
 -   **Usuario:** `admin`
--   **Contraseña:** `admin`
+-   **Contraseña:** `admin123`
 
 Usa estas credenciales para iniciar sesión por primera vez y acceder a todas las funcionalidades de administración.
 

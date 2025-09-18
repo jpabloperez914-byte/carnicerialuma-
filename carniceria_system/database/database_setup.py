@@ -1,10 +1,11 @@
 import sqlite3
-import hashlib
 import datetime
+import sys
+import os
 
-def hash_password(password):
-    """Hashea la contraseña usando SHA-256."""
-    return hashlib.sha256(password.encode('utf-8')).hexdigest()
+# Añadir la raíz del proyecto al path para poder importar desde 'utils'
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+from carniceria_system.utils.security import hash_password
 
 def setup_database():
     """
@@ -50,6 +51,7 @@ def setup_database():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             fecha_llegada TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             peso_inicial REAL NOT NULL,
+            costo REAL NOT NULL DEFAULT 0.0,
             peso_despostado REAL DEFAULT 0.0,
             merma_calculada REAL DEFAULT 0.0,
             proveedor TEXT NOT NULL
@@ -156,17 +158,22 @@ def setup_database():
 
         # --- Inserción de Datos Iniciales ---
 
-        print("Insertando datos iniciales...")
+        print("Insertando y/o actualizando datos iniciales...")
 
-        # Verificar si el usuario admin ya existe
+        # --- Creación/Actualización del usuario admin ---
+        admin_password = hash_password('admin123')
         cursor.execute("SELECT id FROM usuarios WHERE nombre = 'admin'")
-        if cursor.fetchone() is None:
-            admin_password = hash_password('admin')
+        user_exists = cursor.fetchone()
+
+        if user_exists:
+            # Si existe, actualiza su contraseña para asegurar que es correcta
+            cursor.execute("UPDATE usuarios SET password_hash = ?, nivel = 'administrador', activo = 1 WHERE nombre = 'admin'", (admin_password,))
+            print("Usuario 'admin' actualizado con la contraseña correcta.")
+        else:
+            # Si no existe, lo crea
             cursor.execute("INSERT INTO usuarios (nombre, password_hash, nivel) VALUES (?, ?, ?)",
                            ('admin', admin_password, 'administrador'))
             print("Usuario 'admin' creado.")
-        else:
-            print("Usuario 'admin' ya existe.")
 
         # Insertar cortes de carne básicos si no existen
         cortes_iniciales = [

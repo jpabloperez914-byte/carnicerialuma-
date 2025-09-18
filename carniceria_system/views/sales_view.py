@@ -61,11 +61,11 @@ class SalesView(ttk.Frame):
         entry_frame.pack(fill="x", pady=(0, 20))
         entry_frame.grid_columnconfigure(1, weight=1)
 
-        ttk.Label(entry_frame, text="Código:").grid(row=0, column=0, sticky="w", pady=5)
-        self.product_code_var = tk.StringVar()
-        self.product_code_entry = ttk.Entry(entry_frame, textvariable=self.product_code_var)
-        self.product_code_entry.grid(row=0, column=1, sticky="ew", padx=5)
-        self.product_code_entry.bind("<Return>", lambda e: self.add_product_to_cart())
+        ttk.Label(entry_frame, text="Código o Nombre:").grid(row=0, column=0, sticky="w", pady=5)
+        self.product_search_var = tk.StringVar()
+        self.product_search_entry = ttk.Entry(entry_frame, textvariable=self.product_search_var)
+        self.product_search_entry.grid(row=0, column=1, sticky="ew", padx=5)
+        self.product_search_entry.bind("<Return>", lambda e: self.add_product_to_cart())
 
         ttk.Label(entry_frame, text="Peso (kg):").grid(row=1, column=0, sticky="w", pady=5)
         self.product_weight_var = tk.DoubleVar()
@@ -74,7 +74,7 @@ class SalesView(ttk.Frame):
 
         add_button = ttk.Button(entry_frame, text="Añadir al Carrito", command=self.add_product_to_cart)
         add_button.grid(row=2, column=1, sticky="e", pady=10)
-        self.product_code_entry.focus()
+        self.product_search_entry.focus()
 
         # Pago y finalización
         payment_frame = ttk.LabelFrame(controls_frame, text="Finalizar Venta", padding=15)
@@ -91,16 +91,16 @@ class SalesView(ttk.Frame):
         cancel_button.pack(fill="x")
 
     def add_product_to_cart(self):
-        code = self.product_code_var.get()
+        search_term = self.product_search_var.get()
         weight = self.product_weight_var.get()
 
-        if not code or not weight or weight <= 0:
-            messagebox.showwarning("Datos incompletos", "Debe ingresar un código y un peso válido.")
+        if not search_term or not weight or weight <= 0:
+            messagebox.showwarning("Datos incompletos", "Debe ingresar un término de búsqueda y un peso válido.")
             return
 
-        producto = self.producto_controller.obtener_producto_por_codigo(code)
+        producto = self.producto_controller.buscar_producto(search_term)
         if not producto:
-            messagebox.showerror("Error", f"No se encontró ningún producto con el código '{code}'.")
+            messagebox.showerror("Error", f"No se encontró ningún producto con el término '{search_term}'.")
             return
 
         if producto.stock_actual < weight:
@@ -118,9 +118,9 @@ class SalesView(ttk.Frame):
         self.update_total()
 
         # Limpiar entradas
-        self.product_code_var.set("")
+        self.product_search_var.set("")
         self.product_weight_var.set(0.0)
-        self.product_code_entry.focus()
+        self.product_search_entry.focus()
 
     def update_total(self):
         total = sum(item['subtotal'] for item in self.current_cart)

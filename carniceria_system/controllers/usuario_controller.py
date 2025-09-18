@@ -1,12 +1,8 @@
-import hashlib
 import sqlite3
 from ..models.usuario import Usuario
 from ..utils.db_manager import create_connection
+from ..utils.security import hash_password
 from .logging_controller import LoggingController
-
-def _hash_password(password):
-    """Función de ayuda para hashear contraseñas."""
-    return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
 class UsuarioController:
     """
@@ -26,7 +22,7 @@ class UsuarioController:
         Returns:
             Usuario: El objeto Usuario si las credenciales son correctas, None en caso contrario.
         """
-        password_hash = _hash_password(password)
+        password_hash = hash_password(password)
 
         query = "SELECT * FROM usuarios WHERE nombre = ? AND password_hash = ? AND activo = 1"
 
@@ -59,7 +55,7 @@ class UsuarioController:
         Returns:
             int: El ID del nuevo usuario creado, o None si falla.
         """
-        password_hash = _hash_password(password)
+        password_hash = hash_password(password)
         query = "INSERT INTO usuarios (nombre, password_hash, nivel) VALUES (?, ?, ?)"
 
         conn = create_connection()

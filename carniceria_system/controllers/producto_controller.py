@@ -32,23 +32,38 @@ class ProductoController:
                 conn.close()
         return None
 
-    def obtener_producto_por_codigo(self, codigo):
+    def buscar_producto(self, termino):
         """
-        Busca un producto por su código.
+        Busca un producto por su código o por su nombre.
+        Prioriza la búsqueda por código.
         """
-        query = "SELECT * FROM productos WHERE codigo = ?"
         conn = create_connection()
-        if conn:
-            try:
-                cursor = conn.cursor()
-                cursor.execute(query, (codigo,))
-                data = cursor.fetchone()
-                if data:
-                    return Producto(**data)
-            except sqlite3.Error as e:
-                print(f"Error al obtener producto por código: {e}")
-            finally:
+        if not conn:
+            return None
+
+        try:
+            cursor = conn.cursor()
+
+            # 1. Intentar buscar por código exacto
+            query_codigo = "SELECT * FROM productos WHERE codigo = ?"
+            cursor.execute(query_codigo, (termino,))
+            data = cursor.fetchone()
+            if data:
+                return Producto(**data)
+
+            # 2. Si no se encuentra, buscar por nombre (coincidencia parcial, insensible a mayúsculas)
+            query_nombre = "SELECT * FROM productos WHERE nombre LIKE ? COLLATE NOCASE"
+            cursor.execute(query_nombre, (f'%{termino}%',))
+            data = cursor.fetchone()
+            if data:
+                return Producto(**data)
+
+        except sqlite3.Error as e:
+            print(f"Error al buscar producto: {e}")
+        finally:
+            if conn:
                 conn.close()
+
         return None
 
     def obtener_todos_los_productos(self):
