@@ -12,6 +12,7 @@ class SalesUI:
         self.venta_actual = 1
         self.num_ventas = 1
         self.crear_interfaz_ventas()
+        self.simular_venta_inicial()
 
     def crear_interfaz_ventas(self):
         main_frame = tk.Frame(self.parent_frame, bg="#f0f0f0")
@@ -263,6 +264,28 @@ class SalesUI:
                 })
             
             self.actualizar_carrito(num_venta)
+
+    def simular_venta_inicial(self):
+        # Simula la carga de algunos productos en la primera venta
+        productos_a_cargar = [
+            {'codigo': '001', 'cantidad': 0.75},
+            {'codigo': '005', 'cantidad': 1.25},
+            {'codigo': '006', 'cantidad': 0.5},
+        ]
+
+        for item in productos_a_cargar:
+            producto = self.db.buscar_producto_por_codigo(item['codigo'])
+            if producto:
+                # Añadir producto a la venta sin pedir diálogo
+                producto_id = producto['id']
+                self.ventas_data[1]['productos'].append({
+                    'producto_id': producto_id,
+                    'nombre': producto['nombre'],
+                    'cantidad': item['cantidad'],
+                    'precio_unitario': producto['precio_por_kg']
+                })
+
+        self.actualizar_carrito(1)
 
     def actualizar_carrito(self, num_venta):
         for item in self.tree_carrito.get_children():

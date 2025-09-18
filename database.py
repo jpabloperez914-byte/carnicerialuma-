@@ -8,6 +8,7 @@ class DatabaseManager:
         self.conn = sqlite3.connect(db_name)
         self.cursor = self.conn.cursor()
         self.crear_tablas()
+        self._insertar_datos_iniciales()
 
     def crear_tablas(self):
         # Tabla de productos
@@ -55,6 +56,37 @@ class DatabaseManager:
         ''')
 
         self.conn.commit()
+
+    def _insertar_datos_iniciales(self):
+        # Verificar si hay categorías
+        self.cursor.execute("SELECT COUNT(*) FROM categorias")
+        if self.cursor.fetchone()[0] == 0:
+            # Insertar categorías de ejemplo
+            categorias = [('Res',), ('Cerdo',), ('Pollo',), ('Achuras',)]
+            self.cursor.executemany("INSERT INTO categorias (nombre) VALUES (?)", categorias)
+            self.conn.commit()
+
+        # Verificar si hay productos
+        self.cursor.execute("SELECT COUNT(*) FROM productos")
+        if self.cursor.fetchone()[0] == 0:
+            # Obtener los IDs de las categorías insertadas
+            self.cursor.execute("SELECT id, nombre FROM categorias")
+            categorias_map = {nombre: id for id, nombre in self.cursor.fetchall()}
+
+            # Insertar productos de ejemplo
+            productos = [
+                ('001', 'Lomo', categorias_map['Res'], 25.50, 10.0),
+                ('002', 'Costilla', categorias_map['Res'], 18.75, 15.5),
+                ('003', 'Matambre', categorias_map['Res'], 22.00, 8.2),
+                ('004', 'Solomillo de Cerdo', categorias_map['Cerdo'], 20.00, 12.0),
+                ('005', 'Pechuga de Pollo', categorias_map['Pollo'], 15.00, 20.0),
+                ('006', 'Chorizo', categorias_map['Achuras'], 12.50, 30.0),
+            ]
+            self.cursor.executemany('''
+                INSERT INTO productos (codigo_barras, nombre, categoria_id, precio_por_kg, stock_actual)
+                VALUES (?, ?, ?, ?, ?)
+            ''', productos)
+            self.conn.commit()
 
     def insertar_producto(self, codigo_barras, nombre, categoria_id, precio_por_kg, stock_actual):
         try:
