@@ -5,9 +5,9 @@ class MediaRes:
     Representa una media res que ingresa al local.
 
     Este modelo de datos se utiliza para registrar la llegada de una media res,
-    su peso inicial y el proveedor.
+    su peso inicial, costo y el proveedor.
     """
-    def __init__(self, id, fecha_llegada, peso_inicial, proveedor, peso_despostado=0.0, merma_calculada=0.0):
+    def __init__(self, id, fecha_llegada, peso_inicial, costo, proveedor, peso_despostado=0.0, merma_calculada=0.0):
         """
         Inicializa un objeto MediaRes.
 
@@ -15,6 +15,7 @@ class MediaRes:
             id (int): El ID único del registro de la media res.
             fecha_llegada (str or datetime): La fecha y hora de llegada.
             peso_inicial (float): El peso total de la media res en kg.
+            costo (float): El costo de la media res.
             proveedor (str): El nombre del proveedor.
             peso_despostado (float): El peso total obtenido tras el desposte.
             merma_calculada (float): La merma calculada tras el desposte.
@@ -32,6 +33,7 @@ class MediaRes:
             self.fecha_llegada = fecha_llegada
 
         self.peso_inicial = peso_inicial
+        self.costo = costo
         self.proveedor = proveedor
         self.peso_despostado = peso_despostado
         self.merma_calculada = merma_calculada

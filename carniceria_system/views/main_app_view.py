@@ -22,64 +22,66 @@ class MainAppView(ttk.Frame):
         self.grid(row=0, column=0, sticky="nsew")
 
         self.create_widgets()
+        self.bind_shortcuts()
 
     def create_widgets(self):
         # --- Configuración del Layout Principal ---
-        # Columna 0 para la navegación, Columna 1 para el contenido
-        self.grid_columnconfigure(0, weight=0, minsize=200) # Barra de navegación
-        self.grid_columnconfigure(1, weight=1) # Área de contenido
-        self.grid_rowconfigure(0, weight=1)
+        # Fila 0 para la navegación, Fila 1 para el contenido
+        self.grid_rowconfigure(0, weight=0) # Barra de navegación
+        self.grid_rowconfigure(1, weight=1) # Área de contenido
+        self.grid_columnconfigure(0, weight=1)
 
-        # --- Barra de Navegación (Izquierda) ---
-        nav_frame = ttk.Frame(self, style="Card.TFrame", padding=10)
-        nav_frame.grid(row=0, column=0, sticky="nsew")
-        nav_frame.grid_rowconfigure(6, weight=1) # Espacio para empujar logout hacia abajo
+        # --- Barra de Navegación (Superior) ---
+        nav_frame = ttk.Frame(self, style="Header.TFrame", padding=(10, 5))
+        nav_frame.grid(row=0, column=0, sticky="ew")
 
         # Estilo para los botones de navegación
         style = ttk.Style(self)
-        style.configure("Nav.TButton", font=("Helvetica", 12), padding=10)
-        style.map("Nav.TButton",
-                  background=[('active', '#e0e0e0')],
-                  foreground=[('!active', 'black')])
+        style.configure("Header.TFrame", background="#333")
+        style.configure("Nav.TButton", font=("Helvetica", 10), padding=5)
+        style.configure("User.TLabel", font=("Helvetica", 10), background="#333", foreground="white")
 
-        # --- Título y Usuario ---
-        title_label = ttk.Label(nav_frame, text="MENÚ PRINCIPAL", font=("Helvetica", 14, "bold"))
-        title_label.grid(row=0, column=0, pady=(10, 20), sticky="ew")
+        # --- Botones de Navegación (Izquierda) ---
+        sales_button = ttk.Button(nav_frame, text="F1 Ventas", command=self.show_sales_view, style="Nav.TButton")
+        sales_button.pack(side="left", padx=5)
 
-        user_info_label = ttk.Label(nav_frame, text=f"Usuario: {self.current_user.nombre}\nRol: {self.current_user.nivel.title()}", justify="left")
-        user_info_label.grid(row=1, column=0, pady=(0, 30), sticky="ew")
-
-        # --- Botones de Navegación ---
-        stock_button = ttk.Button(nav_frame, text="Gestión de Stock", command=self.show_stock_view, style="Nav.TButton")
-        stock_button.grid(row=2, column=0, sticky="ew", pady=5)
-
-        sales_button = ttk.Button(nav_frame, text="Punto de Venta", command=self.show_sales_view, style="Nav.TButton")
-        sales_button.grid(row=3, column=0, sticky="ew", pady=5)
+        stock_button = ttk.Button(nav_frame, text="F2 Stock", command=self.show_stock_view, style="Nav.TButton")
+        stock_button.pack(side="left", padx=5)
 
         # Botones solo para administradores
         if self.current_user.nivel == 'administrador':
-            reports_button = ttk.Button(nav_frame, text="Reportes y Estadísticas", command=self.show_reports_view, style="Nav.TButton")
-            reports_button.grid(row=4, column=0, sticky="ew", pady=5)
+            reports_button = ttk.Button(nav_frame, text="F3 Reportes de Ventas", command=self.show_reports_view, style="Nav.TButton")
+            reports_button.pack(side="left", padx=5)
 
-            users_button = ttk.Button(nav_frame, text="Gestión de Usuarios", command=self.show_users_view, style="Nav.TButton")
-            users_button.grid(row=5, column=0, sticky="ew", pady=5)
+            users_button = ttk.Button(nav_frame, text="F4 Gestión de Usuarios", command=self.show_users_view, style="Nav.TButton")
+            users_button.pack(side="left", padx=5)
 
             backup_button = ttk.Button(nav_frame, text="Crear Backup", command=self.create_backup, style="Nav.TButton")
-            backup_button.grid(row=6, column=0, sticky="ew", pady=5)
+            backup_button.pack(side="left", padx=5)
 
-        # --- Botón de Logout ---
+        # --- Info de Usuario y Logout (Derecha) ---
         logout_button = ttk.Button(nav_frame, text="Cerrar Sesión", command=self.logout, style="Nav.TButton")
-        logout_button.grid(row=7, column=0, sticky="sew", pady=(20,10))
+        logout_button.pack(side="right", padx=5)
 
+        user_info_label = ttk.Label(nav_frame, text=f"{self.current_user.nombre} ({self.current_user.nivel.title()})", style="User.TLabel")
+        user_info_label.pack(side="right", padx=10)
 
-        # --- Área de Contenido (Derecha) ---
+        # --- Área de Contenido ---
         self.content_frame = ttk.Frame(self, padding=20)
-        self.content_frame.grid(row=0, column=1, sticky="nsew")
+        self.content_frame.grid(row=1, column=0, sticky="nsew")
         self.content_frame.grid_rowconfigure(0, weight=1)
         self.content_frame.grid_columnconfigure(0, weight=1)
 
         # Mostrar la vista de bienvenida por defecto
         self.show_welcome_view()
+
+    def bind_shortcuts(self):
+        """Asigna los atajos de teclado a las funciones de navegación."""
+        self.app_controller.bind("<F1>", lambda event: self.show_sales_view())
+        self.app_controller.bind("<F2>", lambda event: self.show_stock_view())
+        if self.current_user.nivel == 'administrador':
+            self.app_controller.bind("<F3>", lambda event: self.show_reports_view())
+            self.app_controller.bind("<F4>", lambda event: self.show_users_view())
 
     def set_content(self, view_class):
         """Limpia el frame de contenido y muestra una nueva vista."""
@@ -115,6 +117,11 @@ class MainAppView(ttk.Frame):
 
     def logout(self):
         """Notifica al controlador principal para volver a la pantalla de login."""
+        # Desvincular atajos para que no funcionen en la pantalla de login
+        self.app_controller.unbind("<F1>")
+        self.app_controller.unbind("<F2>")
+        self.app_controller.unbind("<F3>")
+        self.app_controller.unbind("<F4>")
         self.app_controller.show_login_view()
 
     def create_backup(self):
